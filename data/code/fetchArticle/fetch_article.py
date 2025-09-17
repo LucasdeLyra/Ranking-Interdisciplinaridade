@@ -20,8 +20,8 @@ FIELDNAMES = {'article': ['eid', 'title', 'published date', 'cited by count'],
               'article_subject_areas': ['eid', 'subject area code'],
               'articles_author': ['eid', 'auid', 'creator'],
               'author': ['auid', 'given name', 'surname', 'indexed name'],
-              'authors_institution': ['affiliation id', 'auid', 'dptid', 'organization'],
-              'institution': ['affiliation id', 'country', 'city']
+              'authors_institution': ['afid', 'auid', 'dptid', 'organization'],
+              'institution': ['afid', 'country', 'city']
             }
 with open(f'./data/code/subject_areas_abbreviation.json', 'r') as subjareas_file:
     SUBJECT_AREAS = json.load(subjareas_file)['subject_areas']
@@ -108,14 +108,14 @@ def get_affiliations(article, institution_ids):
     institution = []
     for authorgroup in article.authorgroup:
         if authorgroup.affiliation_id is not None:               
-            authors_institution.append({'affiliation id': authorgroup.affiliation_id, 
+            authors_institution.append({'afid': authorgroup.affiliation_id, 
                                         'auid': authorgroup.auid, 
                                         'dptid': authorgroup.dptid, 
                                         'organization': authorgroup.organization})
             if authorgroup.affiliation_id not in institution_ids:
-                institution.append({'affiliation id': authorgroup.affiliation_id, 
-                                        'country': authorgroup.country, 
-                                        'city': authorgroup.city})
+                institution.append({'afid': authorgroup.affiliation_id, 
+                                    'country': authorgroup.country, 
+                                    'city': authorgroup.city})
             institution_ids.add(authorgroup.affiliation_id)
             
     return authors_institution, institution, institution_ids
