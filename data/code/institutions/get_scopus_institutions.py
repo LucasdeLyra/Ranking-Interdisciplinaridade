@@ -2,117 +2,102 @@ from pybliometrics.scopus import AffiliationRetrieval
 from pybliometrics.scopus import init as ScopusInit
 import pandas as pd
 from collections import defaultdict
+import json
+import concurrent.futures
+import os
 
 ScopusInit()
 
-df = pd.read_csv(f'./data/data/raw/institution.csv', dtype=object)
-df.drop_duplicates(subset=['afid'], inplace=True)
-df = df.loc[df['country'].isin(['Brazil', 'Brasil'])]
-length = len(df)
+CURRENT_DIR = './data/code/institutions'
+CHECKPOINT_PATH = f'{CURRENT_DIR}/CHECKPOINT'
+ERROR_PATH = f'{CURRENT_DIR}/ERRORS'
 
-affiliations_data = []
-a = 0
-for i, row in df.iterrows():
-    if i >= 10000:
-        break
+def load_checkpoint():
+    if not os.path.exists(CHECKPOINT_PATH):
+        return set()
     try:
-        affiliation = AffiliationRetrieval(row.afid)
-        data = {
-            "index": a,
-            "afid": row.afid,
+        with open(CHECKPOINT_PATH, 'r') as f:
+            return set(json.load(f))
+    except (json.JSONDecodeError, IOError):
+        return set()
+
+def save_checkpoint(processed_afids):
+    with open(CHECKPOINT_PATH, 'w') as f:
+        json.dump(list(processed_afids), f)
+
+def log_error(afid, error_msg):
+    with open(ERROR_PATH, 'a+') as error_log:
+        error_log.write(f'{afid}: {error_msg}\n')
+        
+def fetch_affiliation(index, afid, processed_afids):
+    if afid in processed_afids:
+        return None
+    try:
+        affiliation = AffiliationRetrieval(afid)
+        result = {
+            "eid": affiliation.eid,
+            "index": index,
+            "afid": afid,
             "name": affiliation.affiliation_name,
             "domain": affiliation.org_domain,
             "url": affiliation.org_URL,
             "variants": [v.name for v in (affiliation.name_variants or [])]
         }
-        affiliations_data.append(data)
-
+        processed_afids.add(afid)
+        save_checkpoint(processed_afids)
+        return result
     except Exception as e:
-        print(f'Error retrieving affiliation {row.afid}: {e}')
+        print(f"Error retrieving affiliation {afid}: {e}")
+        log_error(afid, str(e))
+        return None
     
-    finally:
-        a += 1
+def main():
+    df = pd.read_csv(f"./data/data/raw/institution.csv", encoding="utf-8", dtype=object)
+    df.drop_duplicates(subset=["afid"], inplace=True)
+    df = df.loc[df["country"].isin(["Brazil", "Brasil"])]
+    df = df.reset_index(drop=True)
 
-df_save = pd.DataFrame(affiliations_data, columns=["index", "afid", "name", "domain", "url", "variants"])
-df_save.to_csv(f'./example.csv', index=False)
+    processed_afids = load_checkpoint()
+    affiliations_data = []
+    max_workers = 5  # Adjust as needed
 
-name_map = defaultdict(set)
-domain_map = defaultdict(set)
-url_map = defaultdict(set)
-variant_map = defaultdict(set)
-
-for aff in affiliations_data:
-    if aff["name"]:
-        name_map[aff["name"].lower()].add(aff["index"])
-    if aff["domain"]:
-        domain_map[aff["domain"].lower()].add(aff["index"])
-    if aff["url"]:
-        url_map[aff["url"].lower()].add(aff["index"])
-    for v in aff["variants"]:
-        variant_map[v.lower()].add(aff["index"])
-
-old_name_map = name_map.copy()  
-i = False
-# Union by matching fields
-for aff in affiliations_data:
-    idx = aff["index"]
-
-    # Same name
-    if aff["name"] and aff["name"].lower() in name_map:
-        name_map[aff["name"].lower()].add(idx)
-        #print('Found association with same name:', aff["name"])
-        i = True
-
-    # Same domain
-    if aff["domain"] and aff["domain"].lower() in domain_map:
-        name_map[aff["name"].lower()].add(idx)
-        #print('Found association with same domain:', aff["domain"])
-        i = True
-
-
-    # Same URL
-    if aff["url"] and aff["url"].lower() in url_map:
-        name_map[aff["name"].lower()].add(idx)
-        #print('Found association with same URL:', aff["url"])
-        i = True
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = []
+        length = len(df)
+        j = 0
         
+        for i, row in df.iterrows():
+            futures.append(executor.submit(fetch_affiliation, i, row.afid, processed_afids))
+        
+        for future in concurrent.futures.as_completed(futures):
+            j += 1
+            if j % 100 == 0:
+                print(f"Processed {j}/{length} affiliations")
+            result = future.result()
+            if result:
+                affiliations_data.append(result)
 
-    # Name in another's variants
-    for variant in aff["variants"]:
-        v = variant.lower()
-        if v in name_map:
-            name_map[aff["name"].lower()].add(idx)
-            #print('Found association with name in variant:', variant)
-            i = True
+    # Process the results
+    name_map = defaultdict(list)
+    domain_map = defaultdict(list)
+    url_map = defaultdict(list)
+    variant_map = defaultdict(list)
 
-    # Variant in another's variants
-    for variant in aff["variants"]:
-        v = variant.lower()
-        if v in variant_map:
-            name_map[aff["name"].lower()].add(idx)
-            #print('Found association with variant in variant:', variant)
-            i = True
+    for aff in affiliations_data:
+        if aff["name"]:
+            name_map[aff["name"].lower()].append(aff["afid"])
+        if aff["domain"]:
+            domain_map[aff["domain"].lower()].append(aff["afid"])
+        if aff["url"]:
+            url_map[aff["url"].lower()].append(aff["afid"])
+        for v in aff["variants"]:
+            variant_map[v.lower()].append(aff["afid"])
+
+    # Convert for JSON serialization
+    name_map_json = {k: list(set(v)) for k, v in name_map.items()}
     
-print(old_name_map == name_map)   
+    with open("./duplicates2.json", "w", encoding="utf-8") as json_file:
+        json.dump(name_map_json, json_file, indent=4)
 
-print(old_name_map)
-print('--------------')
-print(name_map)
-"""# Assign group IDs
-group_id_map = {}
-current_group_id = 0
-group_ids = []
-
-for i in range(length):
-    root = dus.find(i)
-    if root not in group_id_map:
-        group_id_map[root] = current_group_id
-        current_group_id += 1
-    group_ids.append(group_id_map[root])
-
-# Add to dataframe
-df["institution_group_id"] = group_ids
-
-# Save results
-df.to_csv("./institution_groups.csv", index=False)
-print("Grouping completed and saved.")"""
+if __name__ == "__main__":
+    main()
