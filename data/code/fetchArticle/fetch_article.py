@@ -15,14 +15,15 @@ import itertools
 ScopusInit()
 WorkItem =  namedtuple('WorkItem', ['year', 'subject_area', 'work_done_queue', 'error_queue'])
 STAGING_DIR = './data/data/staging'
-CHECKPOINT_PATH = './data/code/fetchArticle/CHECKPOINT'
-FIELDNAMES = {'article': ['eid', 'title', 'published date', 'cited by count'],
+CURRENT_DIR = './data/code/fetchArticle'
+CHECKPOINT_PATH = f'{CURRENT_DIR}/CHECKPOINT'
+ERROR_PATH = f'{CURRENT_DIR}/ERRORS'
+FIELDNAMES = {'article': ['eid', 'subtype description', 'title', 'published date', 'cited by count'],
               'article_subject_areas': ['eid', 'subject area code'],
-              'articles_author': ['eid', 'auid', 'creator'],
-              'author': ['auid', 'given name', 'surname', 'indexed name'],
-              'authors_institution': ['afid', 'auid', 'dptid', 'organization'],
-              'institution': ['afid', 'country', 'city']
-            }
+              'authors_institution': ['eid', 'auid', 'creator', 'afid', 'dptid', 'organization', 'country', 'city'], 
+              'author': ['auid', 'given name', 'surname', 'indexed name']
+              }
+
 with open(f'./data/code/subject_areas_abbreviation.json', 'r') as subjareas_file:
     SUBJECT_AREAS = json.load(subjareas_file)['subject_areas']
 
@@ -42,7 +43,7 @@ def writer(checkpoint, work_done, error):
             if error_item is None:
                 break
             
-            with open('./data/code/fetchArticle/ERRORS', 'a+') as error_log:
+            with open(ERROR_PATH, 'a+') as error_log:
                 error_log.write(f'{error_item}\n')
         
         if not work_done.empty():
@@ -68,7 +69,7 @@ def writer(checkpoint, work_done, error):
 
 def write_data(files, year):
     for data_type, data in files.items():
-        filename = f'{STAGING_DIR}/{year}/{data_type}.csv' if data_type != 'institution' else f'./data/data/raw/{data_type}.csv'
+        filename = f'{STAGING_DIR}/{year}/{data_type}.csv'
         with open(filename, 'a+', encoding='utf-8', newline='') as articles:
             csvWriter = csv.DictWriter(articles, fieldnames=FIELDNAMES.get(data_type))
             csvWriter.writerows(data)
@@ -77,6 +78,7 @@ def write_data(files, year):
 
 def get_article_info(article):
     return {'eid': article.eid, 
+            'subtype description': article.subtypedescription,
             'title': article.title, 
             'published date': article.coverDate, 
             'cited by count': article.citedby_count}
@@ -88,37 +90,25 @@ def get_subject_areas(article):
                               'subject area code': subarea.code})
     return subject_area
 
-def get_authors(article, creator_name):
-    author = []
-    articles_author = []
-    for authors in article.authors:
-        is_creator = authors.indexed_name == creator_name
-        if authors.auid is not None:
-            author.append({'auid': authors.auid, 
-                           'given name': authors.given_name, 
-                           'surname': authors.surname, 
-                           'indexed name': authors.indexed_name})
-            articles_author.append({'eid': article.eid, 
-                                    'auid': authors.auid, 
-                                    'creator': is_creator})
-    return author, articles_author
-
-def get_affiliations(article, institution_ids):
+def get_affiliations(article, creator_name):
     authors_institution = []
-    institution = []
+    author = []
     for authorgroup in article.authorgroup:
+        is_creator = authorgroup.indexed_name == creator_name
         if authorgroup.affiliation_id is not None:               
-            authors_institution.append({'afid': authorgroup.affiliation_id, 
+            authors_institution.append({'eid': article.eid,
                                         'auid': authorgroup.auid, 
+                                        'creator': is_creator,
+                                        'afid': authorgroup.affiliation_id, 
                                         'dptid': authorgroup.dptid, 
-                                        'organization': authorgroup.organization})
-            if authorgroup.affiliation_id not in institution_ids:
-                institution.append({'afid': authorgroup.affiliation_id, 
-                                    'country': authorgroup.country, 
-                                    'city': authorgroup.city})
-            institution_ids.add(authorgroup.affiliation_id)
-            
-    return authors_institution, institution, institution_ids
+                                        'organization': authorgroup.organization,
+                                        'country': authorgroup.country,
+                                        'city': authorgroup.city})
+            author.append({'auid': authorgroup.auid,
+                           'given name': authorgroup.given_name, 
+                           'surname': authorgroup.surname, 
+                           'indexed name': authorgroup.indexed_name})
+    return authors_institution, author
 
 def process_already_done(year, area, checkpoint, length):
     if str(year) in checkpoint and area in checkpoint[str(year)]:
@@ -132,7 +122,6 @@ def process_already_done(year, area, checkpoint, length):
 def fetch_article_data(work_item):
     year, area, work_done, error = work_item
     files = {key: [] for key in FIELDNAMES}
-    institution_ids = set()
     
     df = pd.read_csv(f'./data/data/raw/scopus/{year}/{area}_{year}.csv')
     df_length = len(df)
@@ -148,23 +137,18 @@ def fetch_article_data(work_item):
             files['article'].append(get_article_info(article))
             files['article_subject_areas'].extend(get_subject_areas(article))
             
-            aux_auth, aux_article_auth = get_authors(article, creator_name)
-            files['articles_author'].extend(aux_article_auth)
-            files['author'].extend(aux_auth)
-            
-            aux_auth_inst, aux_inst, aux_inst_ids = get_affiliations(article, institution_ids)
+            aux_auth_inst, aux_inst = get_affiliations(article, creator_name)
             files['authors_institution'].extend(aux_auth_inst)
-            files['institution'].extend(aux_inst)
-            institution_ids = aux_inst_ids
+            files['author'].extend(aux_inst)
             
             if index % 1000 == 0 or (index + 1) == df_length:
                 work_done.put((year, area, already_done+index, files))
                 print(f'({already_done+index+1:05d}/{df_length:05d}) Fetching data for {year} : {area} : {eid}')
                 files = {key: [] for key in FIELDNAMES}
 
-        except Exception:
+        except Exception as e:
             error.put((eid))
-            print(f'Error fetching data for {year} : {area} : {eid}')
+            print(f'Error fetching data for {year} : {area} : {eid} -- {e}')
             sleep(2)
             
     print(f'--- Completed fetching data: {year} : {area} ---')
@@ -180,7 +164,7 @@ if __name__ == '__main__':
     if not checkpoint:
         for data_type in FIELDNAMES.keys():
             for year in YEARS:
-                filename = f'{STAGING_DIR}/{year}/{data_type}.csv' if data_type != 'institution' else f'./data/data/raw/{data_type}.csv'
+                filename = f'{STAGING_DIR}/{year}/{data_type}.csv'
                 with open(filename, 'w+', encoding='utf-8', newline='') as f:
                     csvWriter = csv.DictWriter(f, fieldnames=FIELDNAMES.get(data_type))
                     csvWriter.writeheader()
@@ -190,7 +174,7 @@ if __name__ == '__main__':
     
     if len(argv) > 1 and argv[1] == 'single':
         for item in WORK_ITEM:
-            fetch_article_data(WORK_ITEM[3])
+            fetch_article_data(item)
     else:   
         with concurrent.futures.ThreadPoolExecutor(max_workers=12) as executor:
             executor.map(fetch_article_data, WORK_ITEM)

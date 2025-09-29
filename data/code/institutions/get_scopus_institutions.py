@@ -30,31 +30,30 @@ def log_error(afid, error_msg):
         error_log.write(f'{afid}: {error_msg}\n')
         
 def fetch_affiliation(index, afid, processed_afids):
-    if afid in processed_afids:
-        return None
     try:
         affiliation = AffiliationRetrieval(afid)
         result = {
-            "eid": affiliation.eid,
-            "index": index,
-            "afid": afid,
-            "name": affiliation.affiliation_name,
-            "domain": affiliation.org_domain,
-            "url": affiliation.org_URL,
-            "variants": [v.name for v in (affiliation.name_variants or [])]
+            'eid': affiliation.eid,
+            'index': index,
+            'afid': afid,
+            'name': affiliation.affiliation_name,
+            'domain': affiliation.org_domain,
+            'url': affiliation.org_URL,
+            'org_type': affiliation.org_type,
+            'variants': [v.name for v in (affiliation.name_variants or [])]
         }
         processed_afids.add(afid)
         save_checkpoint(processed_afids)
         return result
     except Exception as e:
-        print(f"Error retrieving affiliation {afid}: {e}")
+        print(f'Error retrieving affiliation {afid}: {e}')
         log_error(afid, str(e))
         return None
     
 def main():
-    df = pd.read_csv(f"./data/data/raw/institution.csv", encoding="utf-8", dtype=object)
-    df.drop_duplicates(subset=["afid"], inplace=True)
-    df = df.loc[df["country"].isin(["Brazil", "Brasil"])]
+    df = pd.read_csv(f'./data/data/staging/articles_institution.csv', encoding='utf-8', dtype=object)
+    df.drop_duplicates(subset=['afid'], inplace=True)
+    df = df.loc[df['country'].isin(['Brazil', 'Brasil'])]
     df = df.reset_index(drop=True)
 
     processed_afids = load_checkpoint()
@@ -72,11 +71,14 @@ def main():
         for future in concurrent.futures.as_completed(futures):
             j += 1
             if j % 100 == 0:
-                print(f"Processed {j}/{length} affiliations")
+                print(f'Processed {j}/{length} affiliations')
             result = future.result()
             if result:
                 affiliations_data.append(result)
-
+                
+    df = pd.DataFrame(affiliations_data)
+    df.to_csv('./data/data/staging/aux_institutions', index=False, encoding='utf-8')
+    
     # Process the results
     name_map = defaultdict(list)
     domain_map = defaultdict(list)
@@ -84,20 +86,20 @@ def main():
     variant_map = defaultdict(list)
 
     for aff in affiliations_data:
-        if aff["name"]:
-            name_map[aff["name"].lower()].append(aff["afid"])
-        if aff["domain"]:
-            domain_map[aff["domain"].lower()].append(aff["afid"])
-        if aff["url"]:
-            url_map[aff["url"].lower()].append(aff["afid"])
-        for v in aff["variants"]:
-            variant_map[v.lower()].append(aff["afid"])
+        if aff['name']:
+            name_map[aff['name'].lower()].append(aff['afid'])
+        if aff['domain']:
+            domain_map[aff['domain'].lower()].append(aff['afid'])
+        if aff['url']:
+            url_map[aff['url'].lower()].append(aff['afid'])
+        for v in aff['variants']:
+            variant_map[v.lower()].append(aff['afid'])
 
     # Convert for JSON serialization
     name_map_json = {k: list(set(v)) for k, v in name_map.items()}
     
-    with open("./duplicates2.json", "w", encoding="utf-8") as json_file:
+    with open('./duplicates2.json', 'w', encoding='utf-8') as json_file:
         json.dump(name_map_json, json_file, indent=4)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
