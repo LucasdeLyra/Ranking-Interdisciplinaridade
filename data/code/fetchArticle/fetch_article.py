@@ -141,7 +141,7 @@ def fetch_article_data(work_item):
             files['authors_institution'].extend(aux_auth_inst)
             files['author'].extend(aux_inst)
             
-            if index % 1000 == 0 or (index + 1) == df_length:
+            if index % 500 == 0 or (index + 1) == df_length:
                 work_done.put((year, area, already_done+index, files))
                 print(f'({already_done+index+1:05d}/{df_length:05d}) Fetching data for {year} : {area} : {eid}')
                 files = {key: [] for key in FIELDNAMES}
