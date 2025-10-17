@@ -18,7 +18,7 @@ STAGING_DIR = './data/data/staging'
 CURRENT_DIR = './data/code/fetchArticle'
 CHECKPOINT_PATH = f'{CURRENT_DIR}/CHECKPOINT'
 ERROR_PATH = f'{CURRENT_DIR}/ERRORS'
-FIELDNAMES = {'article': ['eid', 'subtype description', 'title', 'published date', 'cited by count'],
+FIELDNAMES = {'article': ['eid', 'subtype description', 'title', 'published date', 'cited by count', 'source id', 'aggregation type'],
               'article_subject_areas': ['eid', 'subject area code'],
               'authors_institution': ['eid', 'auid', 'creator', 'afid', 'dptid', 'organization', 'country', 'city'], 
               'author': ['auid', 'given name', 'surname', 'indexed name']
@@ -81,7 +81,9 @@ def get_article_info(article):
             'subtype description': article.subtypedescription,
             'title': article.title, 
             'published date': article.coverDate, 
-            'cited by count': article.citedby_count}
+            'cited by count': article.citedby_count,
+            'source id': article.source_id,
+            'aggregation type': article.aggregationType}
 
 def get_subject_areas(article):
     subject_area = []
