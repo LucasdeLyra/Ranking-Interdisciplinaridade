@@ -2,7 +2,7 @@ import pandas as pd
 
 STAGING_DIR = './data/data/staging'
 REFINED_DIR = './data/data/refined'
-FILENAMES = ['article_subject_areas', 'article', 'author', 'articles_author', 'authors_institution']
+FILENAMES = ['article_subject_areas', 'article', 'author', 'authors_institution']
 PRIMARY_KEYS = {
     'article_subject_areas': ['eid', 'subject area code'],
     'article': ['eid'],
