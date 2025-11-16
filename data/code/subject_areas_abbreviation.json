@@ -1,6 +1,3 @@
-{
-"subject_areas": ["NURS", "MEDI", "VETE", "DENT", "HEAL", "MULT", 
-                  "AGRI", "BIOC", "IMMU", "NEUR", "PHAR", 
-                  "CENG", "CHEM", "COMP", "EART", "ENER", "ENGI", "ENVI", "MATE", "MATH", "PHYS",
-                  "ARTS", "BUSI", "DECI", "ECON", "PSYC", "SOCI"]
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:46d754ed83b702b36bcaeccbf028187e4869baf77e530cd4d0b75b6f121103a1
+size 293
