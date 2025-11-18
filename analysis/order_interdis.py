@@ -1,5 +1,15 @@
 import pandas as pd
 from pathlib import Path
+import re
+
+def normalize_text(text):
+    """Normalize text: NFKD, remove accents, lowercase, remove parentheses content"""
+    return text.str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8').str.lower().apply(lambda x: re.sub(r'\s*\([^)]*\)', '', x))
+
+# Load RUF data once at the start
+ruf = pd.read_csv('./analysis/data/RUF.csv', encoding="utf-8", delimiter=';')
+ruf['normalized_Universidade'] = normalize_text(ruf['Universidade'])
+print(f"✓ Loaded RUF data: {len(ruf)} rows\n")
 
 macro_folder = Path('./analysis/data/macro')
 sub_folder = Path('./analysis/data/sub')
@@ -17,6 +27,23 @@ for file_path in interdis_files:
     
     df = pd.read_csv(file_path, encoding='utf-8')
     
+    # Load institution names from the same folder
+    institutions_file = file_path.parent / 'institutions_names.csv'
+    if institutions_file.exists():
+        institutions = pd.read_csv(institutions_file, encoding='utf-8')
+        df['LABEL'] = institutions['ins_name']
+        df['normalized_name'] = normalize_text(df['LABEL'])
+        
+        # Merge with RUF data using normalized names
+        df = df.merge(ruf[['normalized_Universidade', 'Ranking', 'Universidade']], 
+                      left_on='normalized_name', 
+                      right_on='normalized_Universidade', 
+                      how='left')
+        print(f"  Merged with RUF: {df['Ranking'].notna().sum()} institutions matched")
+    else:
+        print(f"  ⚠ No institutions_names.csv found in {file_path.parent}")
+    
+    # Sort by DIV_STAR
     df_sorted = df.sort_values('DIV_STAR', ascending=False)
     df_sorted.index = pd.RangeIndex(start=1, stop=len(df) + 1)
 
