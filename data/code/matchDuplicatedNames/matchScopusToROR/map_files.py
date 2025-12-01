@@ -24,10 +24,10 @@ def normalize_name(text):
     return str(text).normalize('NFKD').encode('ascii', errors='ignore').decode('utf-8').lower()
 
 # Load and prepare data
-SCOPUS = pd.read_csv('./data/code/EMECScopusInstitutions/fullMatch/counting.csv', encoding='utf-8')
+SCOPUS = pd.read_csv('./data/code/matchDuplicatedNames/matchScopusToEMEC/counting.csv', encoding='utf-8')
 SCOPUS = SCOPUS[SCOPUS['match_count'] == 0].copy()
 
-with open('./data/code/EMECScopusInstitutions/matchEnglishNames/ror_brazil.json', 'r', encoding='utf-8') as f:
+with open('./data/code/matchDuplicatedNames/matchScopusToROR/ror_brazil.json', 'r', encoding='utf-8') as f:
     ROR_DATA = json.load(f)
 
 # Convert ROR data to DataFrame
@@ -269,7 +269,7 @@ def main():
     print(f"\nExact matches found: {len(exact_matches)}")
     # Combine both    
     # Save results
-    exact_matches.to_csv('./data/code/EMECScopusInstitutions/matchEnglishNames/ror_matches.csv', index=False, encoding='utf-8')
+    exact_matches.to_csv('./data/code/matchDuplicatedNames/matchScopusToROR/ror_matches.csv', index=False, encoding='utf-8')
     print(f"\nTotal matches found: {len(exact_matches)}")
     print("Matches saved to ror_matches.csv")
     

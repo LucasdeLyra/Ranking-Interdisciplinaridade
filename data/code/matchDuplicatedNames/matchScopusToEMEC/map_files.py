@@ -114,5 +114,5 @@ institutions_b_with_counts = count_matches_for_b(SCOPUS, matched_df)
 matched_df.drop(['A_original_index', 'normalized_Instituição(IES)', 'level_0', 'B_original_index', 'normalized_variants', 'normalized_name', 'normalized_domain', 'normalized_url', 'normalized_Sitio'], axis=1, inplace=True)
 institutions_b_with_counts.drop(['level_0', 'normalized_variants', 'normalized_name', 'normalized_domain', 'normalized_url'], axis=1, inplace=True)
 
-matched_df.to_csv('./data/code/EMECScopusInstitutions/matches.csv', index=False)
-institutions_b_with_counts.to_csv('./data/code/EMECScopusInstitutions/counting.csv', index=False)
+matched_df.to_csv('./data/code/matchDuplicatedNames/matchScopusToEMEC/matches.csv', index=False)
+institutions_b_with_counts.to_csv('./data/code/matchDuplicatedNames/matchScopusToEMEC/counting.csv', index=False)
