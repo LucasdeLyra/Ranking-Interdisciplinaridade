@@ -95,10 +95,9 @@ def main():
         for v in aff['variants']:
             variant_map[v.lower()].append(aff['afid'])
 
-    # Convert for JSON serialization
     name_map_json = {k: list(set(v)) for k, v in name_map.items()}
     
-    with open('./duplicates2.json', 'w', encoding='utf-8') as json_file:
+    with open('./data/code/institutions/duplicates.json', 'w', encoding='utf-8') as json_file:
         json.dump(name_map_json, json_file, indent=4)
 
 if __name__ == '__main__':

@@ -1,13 +1,85 @@
+"""
+<<<<<<< HEAD
+=======
+Brazilian SCOPUS Articles Retrieval Module
+===========================================
+
+>>>>>>> 02493ffa744763bd04fcaff684efcb878b374697
+Purpose:
+    Retrieves scientific articles authored by Brazilian institutions from the
+    SCOPUS database across multiple years and subject areas.
+
+Description:
+    This script queries the SCOPUS API using the pybliometrics library to fetch
+    articles matching specific criteria:
+    - Publication year: 2015-2024
+    - Author affiliation country: Brazil
+    - Subject areas: Defined in subject_areas_abbreviation.json
+    
+    For each year-subject area combination, the script performs a SCOPUS search,
+    retrieves results in STANDARD view format, converts results to a DataFrame,
+    and exports to a CSV file for further processing.
+
+Data Flow:
+    1. Initialize SCOPUS API authentication using stored credentials
+    2. Load subject area abbreviations from JSON configuration file
+    3. For each year (2015-2024):
+       - For each subject area:
+         - Query SCOPUS API with year, country, and subject area filters
+         - Convert results to pandas DataFrame
+         - Export to CSV file in year-specific directory
+    
+    Input File:
+        ./data/code/subject_areas_abbreviation.json
+        
+    Output Directory Structure:
+        ./data/data/raw/
+        ├── 2015/
+        │   ├── AGRI_2015.csv
+        │   ├── ARTS_2015.csv
+        │   └── ...
+        ├── 2016/
+        │   └── ...
+        └── 2024/
+            └── ...
+
+Requirements:
+    - pybliometrics library with SCOPUS API credentials configured
+    - pandas for DataFrame manipulation
+    - API credentials stored in pybliometrics configuration
+    - Internet connection for SCOPUS API access
+
+Output Format:
+    CSV files with STANDARD view SCOPUS data including:
+    - Article metadata (title, authors, publication year)
+    - Citation information
+    - Affiliation data
+    - Subject area classifications
+<<<<<<< HEAD
+"""
+=======
+
+Author: Lucas de Lyra
+Project: Ranking-Interdisciplinaridade (USP RP2)
+"""
+
+>>>>>>> 02493ffa744763bd04fcaff684efcb878b374697
 from pybliometrics.scopus import ScopusSearch
 from pybliometrics.scopus import init as ScopusInit
 
 import pandas as pd
 import json
 
-ScopusInit()  # read API keys
-
+ScopusInit()
+"""
+File structure of /data/code/subject_areas_abbreviation.json:
+    {
+        "subject_areas": ["AGRI", "ARTS", "BIOC", ...]
+    }
+"""
 with open(f'./data/code/subject_areas_abbreviation.json', 'r') as subjareas_file:
     SUBJECT_AREAS = json.load(subjareas_file)['subject_areas']
+    
     
 for year in range(2015, 2025):
     for area in SUBJECT_AREAS:
@@ -15,7 +87,6 @@ for year in range(2015, 2025):
         search = ScopusSearch(query, view='STANDARD', verbose=True)
         df = pd.DataFrame(search.results)
         output_file = f'./data/data/raw/{year}/{area}_{year}.csv'
-
         df.to_csv(output_file, index=False)
         print(f'Saved results to {output_file}')
         
