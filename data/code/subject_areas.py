@@ -1,10 +1,4 @@
 """
-<<<<<<< HEAD
-=======
-Subject Areas Data Processing Module
-====================================
-
->>>>>>> 02493ffa744763bd04fcaff684efcb878b374697
 Purpose:
     Processes article subject area data from a JSON source file and outputs
     a structured CSV file containing subject area codes, descriptions, and
@@ -44,14 +38,7 @@ Input File:
     ./data/data/raw/article_subareas.json
 
 Output File:
-<<<<<<< HEAD
     ./data/data/staging/subject_area.csv
-=======
-    ./data/data/staging/subject area.csv
-
-Author: Lucas de Lyra
-Project: Ranking-Interdisciplinaridade (USP RP2)
->>>>>>> 02493ffa744763bd04fcaff684efcb878b374697
 """
 
 import json
@@ -76,11 +63,7 @@ with open('./data/data/raw/article_subareas.json', 'r') as subject_areas_file:
             abbreviation = 'CENG'
         for subarea in area['child']:
             subjareas.append({'code': subarea['code'], 'area': subarea['desc'], 'abbreviation': abbreviation})
-            
-<<<<<<< HEAD
+
 with open(f'{STAGING_DIR}/subject_area.csv', 'w', encoding="utf-8", newline='') as articles:
-=======
-with open(f'{STAGING_DIR}/subject area.csv', 'w', encoding="utf-8", newline='') as articles:
->>>>>>> 02493ffa744763bd04fcaff684efcb878b374697
     writer = csv.DictWriter(articles, fieldnames=['code', 'area', 'abbreviation'])
     writer.writerows(subjareas)

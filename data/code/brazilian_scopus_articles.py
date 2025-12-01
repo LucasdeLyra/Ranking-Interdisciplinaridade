@@ -1,10 +1,4 @@
 """
-<<<<<<< HEAD
-=======
-Brazilian SCOPUS Articles Retrieval Module
-===========================================
-
->>>>>>> 02493ffa744763bd04fcaff684efcb878b374697
 Purpose:
     Retrieves scientific articles authored by Brazilian institutions from the
     SCOPUS database across multiple years and subject areas.
@@ -55,15 +49,7 @@ Output Format:
     - Citation information
     - Affiliation data
     - Subject area classifications
-<<<<<<< HEAD
 """
-=======
-
-Author: Lucas de Lyra
-Project: Ranking-Interdisciplinaridade (USP RP2)
-"""
-
->>>>>>> 02493ffa744763bd04fcaff684efcb878b374697
 from pybliometrics.scopus import ScopusSearch
 from pybliometrics.scopus import init as ScopusInit
 

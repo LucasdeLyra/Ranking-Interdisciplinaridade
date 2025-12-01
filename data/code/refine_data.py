@@ -1,17 +1,11 @@
 """
+Purpose:
+    Consolidates multi-year SCOPUS article data from staging directory into
+    refined CSV files with deduplication and normalization.
+
 <<<<<<< HEAD
-Purpose:
-    Consolidates multi-year SCOPUS article data from staging directory into
-    refined CSV files with deduplication and normalization.
-
+>>>>>>> 02493ffa744763bd04fcaff684efcb878b374697
 =======
-Data Refinement and Consolidation Module
-========================================
-
-Purpose:
-    Consolidates multi-year SCOPUS article data from staging directory into
-    refined CSV files with deduplication and normalization.
-
 >>>>>>> 02493ffa744763bd04fcaff684efcb878b374697
 Description:
     This module reads raw SCOPUS data from individual year directories,
@@ -40,6 +34,12 @@ Output Files:
         - articles_institution.csv (article-institution relationships)
         - departments.csv (department information)
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+Author: Lucas de Lyra
+Project: Ranking-Interdisciplinaridade (USP RP2)
+>>>>>>> 02493ffa744763bd04fcaff684efcb878b374697
 =======
 
 Author: Lucas de Lyra

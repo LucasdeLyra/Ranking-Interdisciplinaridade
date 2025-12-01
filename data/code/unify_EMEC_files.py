@@ -1,10 +1,4 @@
 """
-<<<<<<< HEAD
-=======
-EMEC Files Unification Script
-==============================
-
->>>>>>> 02493ffa744763bd04fcaff684efcb878b374697
 Purpose:
     This script consolidates multiple EMEC (Ministério da Educação - Brazilian Education Ministry)
     institution data files into a single unified CSV file.
@@ -17,13 +11,6 @@ Description:
 Data Source:
     - Input: Multiple .xls files located in './data/data/raw/EMEC/'
     - Output: Single unified CSV file at './data/data/raw/EMEC/EMEC_institutions.csv'
-<<<<<<< HEAD
-=======
-
-Author: Lucas de Lyra
-Date: 2025-11-16
-Project: Ranking-Interdisciplinaridade (USP RP2)
->>>>>>> 02493ffa744763bd04fcaff684efcb878b374697
 """
 
 import pandas as pd
