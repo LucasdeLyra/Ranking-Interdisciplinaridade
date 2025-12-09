@@ -45,6 +45,7 @@ import json
 import csv
 
 STAGING_DIR = './data/data/staging'
+REFINED_DIR = './data/data/refined'
 
 with open('./data/data/raw/article_subareas.json', 'r') as subject_areas_file:
     """
@@ -65,5 +66,9 @@ with open('./data/data/raw/article_subareas.json', 'r') as subject_areas_file:
             subjareas.append({'code': subarea['code'], 'area': subarea['desc'], 'abbreviation': abbreviation})
 
 with open(f'{STAGING_DIR}/subject_area.csv', 'w', encoding="utf-8", newline='') as articles:
+    writer = csv.DictWriter(articles, fieldnames=['code', 'area', 'abbreviation'])
+    writer.writerows(subjareas)
+    
+with open(f'{REFINED_DIR}/csvs/subject_area.csv', 'w', encoding="utf-8", newline='') as articles:
     writer = csv.DictWriter(articles, fieldnames=['code', 'area', 'abbreviation'])
     writer.writerows(subjareas)
