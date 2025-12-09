@@ -37,12 +37,6 @@ Data Flow:
         └── 2024/
             └── ...
 
-Requirements:
-    - pybliometrics library with SCOPUS API credentials configured
-    - pandas for DataFrame manipulation
-    - API credentials stored in pybliometrics configuration
-    - Internet connection for SCOPUS API access
-
 Output Format:
     CSV files with STANDARD view SCOPUS data including:
     - Article metadata (title, authors, publication year)
@@ -52,17 +46,11 @@ Output Format:
 """
 from pybliometrics.scopus import ScopusSearch
 from pybliometrics.scopus import init as ScopusInit
-
 import pandas as pd
 import json
 
 ScopusInit()
-"""
-File structure of /data/code/subject_areas_abbreviation.json:
-    {
-        "subject_areas": ["AGRI", "ARTS", "BIOC", ...]
-    }
-"""
+
 with open(f'./data/code/subject_areas_abbreviation.json', 'r') as subjareas_file:
     SUBJECT_AREAS = json.load(subjareas_file)['subject_areas']
     

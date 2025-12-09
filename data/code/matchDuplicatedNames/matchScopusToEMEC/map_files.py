@@ -10,7 +10,6 @@ SCOPUS = pd.read_csv(f'./data/data/staging/aux_institutions.csv', encoding='utf-
 def normalize_site(url):
     if pd.isna(url):
         return url
-        
     url = str(url).lower().strip()
     url =  url.replace('http://', '')
     url =  url.replace('https://', '') 

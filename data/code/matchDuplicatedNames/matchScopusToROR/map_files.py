@@ -2,10 +2,8 @@ from collections import defaultdict
 import pandas as pd
 import json
 import re
-import ast
 
 def normalize_site(url):
-        
     url = str(url).lower().strip()
     url = url.replace('http://', '')
     url = url.replace('https://', '') 
@@ -33,9 +31,8 @@ with open('./data/code/matchDuplicatedNames/matchScopusToROR/ror_brazil.json', '
 # Convert ROR data to DataFrame
 ror_rows = []
 for inst in ROR_DATA:
-    if not inst:  # Skip empty entries  
+    if not inst:
         continue
-    # Extract label text from label dictionaries
     labels_list = []
     for label_obj in inst.get('labels', []):
         if isinstance(label_obj, dict) and 'label' in label_obj:
@@ -43,10 +40,8 @@ for inst in ROR_DATA:
         elif isinstance(label_obj, str):
             labels_list.append(label_obj)
     
-    # Extract acronyms
     acronyms_list = inst.get('acronyms', [])
     
-    # Extract aliases
     aliases_list = inst.get('aliases', [])
     
     row = {
@@ -62,7 +57,6 @@ for inst in ROR_DATA:
 
 ROR = pd.DataFrame(ror_rows)
 
-# Prepare SCOPUS data
 SCOPUS['normalized_domain'] = SCOPUS['domain'].apply(normalize_site)
 SCOPUS['normalized_url'] = SCOPUS['url'].apply(normalize_site)
 SCOPUS['normalized_name'] = SCOPUS['name'].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8').str.lower().apply(lambda x: re.sub(r'\s*\([^)]*\)', '', x))
@@ -75,13 +69,11 @@ def normalize_label(label_list):
     normalized_labels = []
     for label in label_list:
         if isinstance(label, str):
-            # Normalize the string
             normalized = str(label).lower().strip()
-            # Remove accents
             normalized = normalized.encode('utf-8').decode('utf-8')
-            normalized = re.sub(r'\s+', ' ', normalized)  # Normalize whitespace
-            normalized = re.sub(r'\s*\([^)]*\)', '', normalized)  # Remove parenthetical content
-            normalized = re.sub(r'\s+', ' ', normalized)  # Normalize whitespace again
+            normalized = re.sub(r'\s+', ' ', normalized)
+            normalized = re.sub(r'\s*\([^)]*\)', '', normalized)
+            normalized = re.sub(r'\s+', ' ', normalized)
             normalized_labels.append(normalized)
     return normalized_labels
 
@@ -243,37 +235,14 @@ def match_with_ror_data():
     
     return final_matches
 
-def fuzzy_match_names(scopus_name, ror_names, threshold=0.7):
-    """
-    Perform fuzzy matching between SCOPUS name and ROR names/labels.
-    Returns the best match if similarity >= threshold, else None.
-    """
-    from difflib import SequenceMatcher
-    
-    best_match = None
-    best_ratio = 0
-    
-    for ror_name in ror_names:
-        ratio = SequenceMatcher(None, scopus_name, ror_name).ratio()
-        if ratio > best_ratio:
-            best_ratio = ratio
-            best_match = ror_name
-    
-    return best_match if best_ratio >= threshold else None
-
-
-
 def main():
-    # Exact matches
     exact_matches = match_with_ror_data()
     print(f"\nExact matches found: {len(exact_matches)}")
-    # Combine both    
-    # Save results
+    
     exact_matches.to_csv('./data/code/matchDuplicatedNames/matchScopusToROR/ror_matches.csv', index=False, encoding='utf-8')
     print(f"\nTotal matches found: {len(exact_matches)}")
     print("Matches saved to ror_matches.csv")
     
-    # Print summary by match type
     print("\nMatches by type:")
     print(exact_matches['match_type'].value_counts())
 

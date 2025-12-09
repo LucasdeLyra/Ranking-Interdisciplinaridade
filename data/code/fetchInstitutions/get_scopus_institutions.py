@@ -8,7 +8,7 @@ import os
 
 ScopusInit()
 
-CURRENT_DIR = './data/code/institutions'
+CURRENT_DIR = './data/code/fetchInstitutions'
 CHECKPOINT_PATH = f'{CURRENT_DIR}/CHECKPOINT'
 ERROR_PATH = f'{CURRENT_DIR}/ERRORS'
 
@@ -57,7 +57,19 @@ def main():
     df = df.reset_index(drop=True)
 
     processed_afids = load_checkpoint()
+    # Filter out already processed AFIDs
+    df = df[~df['afid'].isin(processed_afids)]
+    df = df.reset_index(drop=True)
+    
     affiliations_data = []
+    # Load existing data if file exists
+    if os.path.exists('./data/data/staging/aux_institutions.csv'):
+        try:
+            existing_df = pd.read_csv('./data/data/staging/aux_institutions.csv', encoding='utf-8', dtype=object)
+            affiliations_data = existing_df.to_dict('records')
+        except Exception as e:
+            print(f'Could not load existing aux_institutions.csv: {e}')
+    
     max_workers = 5  # Adjust as needed
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -75,9 +87,13 @@ def main():
             result = future.result()
             if result:
                 affiliations_data.append(result)
-                
-    df = pd.DataFrame(affiliations_data)
-    df.to_csv('./data/data/staging/aux_institutions', index=False, encoding='utf-8')
+    
+    # Only write if there's data to write
+    if affiliations_data:
+        df = pd.DataFrame(affiliations_data)
+        df.to_csv('./data/data/staging/aux_institutions.csv', index=False, encoding='utf-8')
+    else:
+        print('No new affiliations to process')
     
     # Process the results
     name_map = defaultdict(list)
@@ -87,17 +103,17 @@ def main():
 
     for aff in affiliations_data:
         if aff['name']:
-            name_map[aff['name'].lower()].append(aff['afid'])
+            name_map[str(aff['name']).lower()].append(aff['afid'])
         if aff['domain']:
-            domain_map[aff['domain'].lower()].append(aff['afid'])
+            domain_map[str(aff['domain']).lower()].append(aff['afid'])
         if aff['url']:
-            url_map[aff['url'].lower()].append(aff['afid'])
+            url_map[str(aff['url']).lower()].append(aff['afid'])
         for v in aff['variants']:
-            variant_map[v.lower()].append(aff['afid'])
+            variant_map[str(v).lower()].append(aff['afid'])
 
     name_map_json = {k: list(set(v)) for k, v in name_map.items()}
     
-    with open('./data/code/institutions/duplicates.json', 'w', encoding='utf-8') as json_file:
+    with open('./data/code/fetchInstitutions/duplicates.json', 'w', encoding='utf-8') as json_file:
         json.dump(name_map_json, json_file, indent=4)
 
 if __name__ == '__main__':

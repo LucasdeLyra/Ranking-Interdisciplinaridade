@@ -2,11 +2,7 @@
 Purpose:
     Consolidates multi-year SCOPUS article data from staging directory into
     refined CSV files with deduplication and normalization.
-
-<<<<<<< HEAD
->>>>>>> 02493ffa744763bd04fcaff684efcb878b374697
-=======
->>>>>>> 02493ffa744763bd04fcaff684efcb878b374697
+    
 Description:
     This module reads raw SCOPUS data from individual year directories,
     concatenates records across years (2015-2024), removes duplicates based
@@ -33,18 +29,6 @@ Output Files:
         - articles_author.csv (article-author relationships)
         - articles_institution.csv (article-institution relationships)
         - departments.csv (department information)
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
-Author: Lucas de Lyra
-Project: Ranking-Interdisciplinaridade (USP RP2)
->>>>>>> 02493ffa744763bd04fcaff684efcb878b374697
-=======
-
-Author: Lucas de Lyra
-Project: Ranking-Interdisciplinaridade (USP RP2)
->>>>>>> 02493ffa744763bd04fcaff684efcb878b374697
 """
 
 import pandas as pd
@@ -56,7 +40,7 @@ PRIMARY_KEYS = {
     'article_subject_areas': ['eid', 'subject area code'],
     'article': ['eid'],
     'author': ['auid'],
-    'authors_institution': [],
+    'authors_institution': ['eid','afid', 'auid', 'dptid'],
     'articles_institution': ['eid','afid'],
     'articles_author':['eid','auid'],
     'departments': ['dptid']
@@ -80,12 +64,10 @@ for filename in FILENAMES:
             files.append(pd.read_csv(input_file, dtype=object))
     
     combined = pd.concat(files)
-    
-    if filename != 'authors_institution':
-        combined.drop_duplicates(inplace=True, subset=[*PRIMARY_KEYS[filename]])
-        combined.to_csv(f'{REFINED_DIR}/{filename}.csv', index=False, encoding="utf-8")  
+    combined.drop_duplicates(inplace=True, subset=[*PRIMARY_KEYS[filename]])
+    combined.to_csv(f'{REFINED_DIR}/csvs/{filename}.csv', index=False, encoding="utf-8")  
 
-    else:
+    if filename == 'authors_institution':
         articles_author = combined[['eid', 'auid', 'creator']]
         articles_institution = combined[['eid', 'afid', 'creator', 'country']]
         departments = combined[['afid', 'dptid', 'organization', 'country', 'city']]
@@ -96,8 +78,8 @@ for filename in FILENAMES:
 
         articles_author.drop_duplicates(inplace=True, subset=[*PRIMARY_KEYS['articles_author']])
         articles_author.dropna(subset=[*PRIMARY_KEYS['articles_author']], inplace=True)
-        articles_author.to_csv(f'{REFINED_DIR}/articles_author.csv', index=False, encoding="utf-8")
+        articles_author.to_csv(f'{REFINED_DIR}/csvs/articles_author.csv', index=False, encoding="utf-8")
         
         departments.drop_duplicates(inplace=True, subset=[*PRIMARY_KEYS['departments']])
         departments.dropna(subset=[*PRIMARY_KEYS['departments']], inplace=True)
-        departments.to_csv(f'{REFINED_DIR}/departments.csv', index=False, encoding="utf-8")
+        departments.to_csv(f'{REFINED_DIR}/csvs/departments.csv', index=False, encoding="utf-8")
