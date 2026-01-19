@@ -4,6 +4,9 @@ import json
 import re
 
 def normalize_site(url):
+    if pd.isna(url):
+        return url
+    
     url = str(url).lower().strip()
     url = url.replace('http://', '')
     url = url.replace('https://', '') 
@@ -12,8 +15,22 @@ def normalize_site(url):
     url = url.replace('www3.', '')
     url = url.replace('www4.', '')
     url = url.replace('www5.', '')
-    if url.endswith('/'):
-        url = url.rstrip('/')
+    url = url.replace('internacional.', '')
+    url = url.replace('\'', '')
+    url = url.replace('[', '')
+    
+    # Find the last occurring domain extension and truncate after it
+    extensions = ['.br', '.org', '.com', '.rio', '.edu', '.net', '.vc', '.online', '.school']
+    last_index = -1
+    for ext in extensions:
+        index = url.rfind(ext)
+        if index > last_index:
+            last_index = index
+    
+    if last_index != -1:
+        url = url[:last_index + len([ext for ext in extensions if url.rfind(ext) == last_index][0])]
+        
+    url = url.replace('/', '')
     return url
 
 def normalize_name(text):
@@ -22,10 +39,10 @@ def normalize_name(text):
     return str(text).normalize('NFKD').encode('ascii', errors='ignore').decode('utf-8').lower()
 
 # Load and prepare data
-SCOPUS = pd.read_csv('./data/code/matchDuplicatedNames/matchScopusToEMEC/counting.csv', encoding='utf-8')
+SCOPUS = pd.read_csv('./data/code/matchDuplicatedNames/3_matchScopusToEMECSpecialCases/1_matchPUC/counting.csv', encoding='utf-8')
 SCOPUS = SCOPUS[SCOPUS['match_count'] == 0].copy()
 
-with open('./data/code/matchDuplicatedNames/matchScopusToROR/ror_brazil.json', 'r', encoding='utf-8') as f:
+with open('./data/code/matchDuplicatedNames/4_matchScopusToROR/ror_brazil.json', 'r', encoding='utf-8') as f:
     ROR_DATA = json.load(f)
 
 # Convert ROR data to DataFrame
@@ -61,7 +78,8 @@ SCOPUS['normalized_domain'] = SCOPUS['domain'].apply(normalize_site)
 SCOPUS['normalized_url'] = SCOPUS['url'].apply(normalize_site)
 SCOPUS['normalized_name'] = SCOPUS['name'].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8').str.lower().apply(lambda x: re.sub(r'\s*\([^)]*\)', '', x))
 SCOPUS['normalized_variants'] = SCOPUS['variants'].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8').str.lower().apply(lambda x: re.sub(r'\s*\([^)]*\)', '', x))
-
+print(SCOPUS['normalized_domain'] )
+print(SCOPUS['normalized_url'] )
 def normalize_label(label_list):
     """Normalize a list of labels (now they're already extracted as strings)"""
     if not isinstance(label_list, list):
@@ -80,6 +98,8 @@ def normalize_label(label_list):
 ROR['normalized_name'] = ROR['name'].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8').str.lower().apply(lambda x: re.sub(r'\s*\([^)]*\)', '', x))
 ROR['normalized_labels'] = ROR['labels'].apply(normalize_label)
 ROR['normalized_links'] = ROR['links'].apply(normalize_site)
+
+print(ROR['normalized_links'])
 
 # Build a dictionary to map ROR IDs to their institution names (for hospital relationships)
 ROR_ID_TO_NAME = dict(zip(ROR['ror_id'], ROR['name']))
@@ -202,7 +222,6 @@ def match_with_ror_data():
     result_list = []
     for _, row in combined_matches.iterrows():
         ror_name = row.get('name_y') or row.get('name')
-        
         # Check if the ROR institution is a hospital
         is_hospital = 'hospital' in ror_name.lower() if isinstance(ror_name, str) else False
         
@@ -225,11 +244,14 @@ def match_with_ror_data():
             'ror_id': row.get('ror_id'),
             'matched_label': row.get('matched_label', ''),
             'match_type': row.get('match_type'),
+            'link': row.get('normalized_links'),
+            'city': row.get('city'),
+            'state': row.get('state'),
             'is_hospital': is_hospital,
             'related_institution': related_institution
         }
         result_list.append(result_row)
-    
+
     final_matches = pd.DataFrame(result_list)
     final_matches = final_matches.drop_duplicates(subset=['eid', 'ror_id'], keep='first')
     
@@ -239,7 +261,7 @@ def main():
     exact_matches = match_with_ror_data()
     print(f"\nExact matches found: {len(exact_matches)}")
     
-    exact_matches.to_csv('./data/code/matchDuplicatedNames/matchScopusToROR/ror_matches.csv', index=False, encoding='utf-8')
+    exact_matches.to_csv('./data/code/matchDuplicatedNames/4_matchScopusToROR/ror_matches.csv', index=False, encoding='utf-8')
     print(f"\nTotal matches found: {len(exact_matches)}")
     print("Matches saved to ror_matches.csv")
     

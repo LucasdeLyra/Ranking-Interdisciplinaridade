@@ -40,6 +40,8 @@ def fetch_affiliation(index, afid, processed_afids):
             'domain': affiliation.org_domain,
             'url': affiliation.org_URL,
             'org_type': affiliation.org_type,
+            'state': affiliation.state,
+            'city': affiliation.city,
             'variants': [v.name for v in (affiliation.name_variants or [])]
         }
         processed_afids.add(afid)

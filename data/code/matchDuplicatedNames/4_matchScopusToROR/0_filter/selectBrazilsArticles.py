@@ -7,7 +7,7 @@ with open(f'{RAW_DIR}/v1.70-2025-08-26-ror-data.json', 'r') as raw_ROR:
 
 only_brazil = [record for record in ROR_with_all_countries if record['country']['country_name'] == 'Brazil']
 
-output_path = f'data/code/matchDuplicatedNames/matchScopusToROR/ror_brazil.json'
+output_path = f'data/code/matchDuplicatedNames/4_matchScopusToROR/ror_brazil.json'
 with open(output_path, 'w', encoding='utf-8') as filtered_ROR:
     json.dump(only_brazil, filtered_ROR, ensure_ascii=False, indent=4)
 
