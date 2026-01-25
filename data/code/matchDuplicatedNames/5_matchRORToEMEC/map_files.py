@@ -21,6 +21,8 @@ def normalize_site(url):
     url = url.replace('www4.', '')
     url = url.replace('www5.', '')
     url = url.replace('internacional.', '')
+    url = url.replace('international.', '')
+    url = url.replace('portal.', '')
     url = url.replace('\'', '')
     url = url.replace('[', '')
     

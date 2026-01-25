@@ -5,10 +5,15 @@ import os
 scopus_emec_domain_path = "./data/code/matchDuplicatedNames/0_matchScopusToEMECByDomain/matches.csv"
 scopus_emec_emec_path = "./data/code/matchDuplicatedNames/1_matchScopusToEMECByName/matches.csv"
 scopus_emec_emec_sigla = "./data/code/matchDuplicatedNames/2_matchScopusToEMECBySigla/matches.csv"
-scopus_emec_special_cases = "data/code/matchDuplicatedNames/3_matchScopusToEMECSpecialCases/matches.csv"
+scopus_emec_special_cases1 = "data/code/matchDuplicatedNames/3_matchScopusToEMECSpecialCases/0_matchUNESP/matches.csv"
+scopus_emec_special_cases2 = "data/code/matchDuplicatedNames/3_matchScopusToEMECSpecialCases/1_matchPUC/matches.csv"
+scopus_emec_special_cases3 = "data/code/matchDuplicatedNames/3_matchScopusToEMECSpecialCases/2_matchFATEC/matches.csv"
 ror_emec_path = "./data/code/matchDuplicatedNames/5_matchRORToEMEC/matches.csv"
+corrected_matches = "data/code/matchDuplicatedNames/7_manualValidation/corrected_matches.csv"
+manual_matches = "data/code/matchDuplicatedNames/7_manualValidation/matches.csv"
 
-file_paths = [scopus_emec_domain_path, scopus_emec_emec_path, scopus_emec_emec_sigla, scopus_emec_special_cases, ror_emec_path]
+file_paths = [scopus_emec_domain_path, scopus_emec_emec_path, scopus_emec_emec_sigla, scopus_emec_special_cases1, scopus_emec_special_cases2, scopus_emec_special_cases3,
+              ror_emec_path, corrected_matches, manual_matches]
 output_dir = "./data/data/refined/csvs"
 output_path = os.path.join(output_dir, "institutions.csv")
 
@@ -26,11 +31,15 @@ for file_path in file_paths:
 
 # Define columns to drop from each file
 columns_to_drop = {
-    0: ['name_match', 'url_match', 'domain_match', 'variant_match'],
+    0: ['name_match', 'url_match', 'domain_match', 'variant_match', 'email_domain_match', 'email_url_match'],
     1: ['name_match', 'url_match', 'domain_match', 'variant_match'],
-    2: ['name_match', 'url_match', 'domain_match', 'variant_match'],
-    3: ['name_match', 'url_match', 'domain_match', 'variant_match'],
-    4: ['matched_label', 'match_type', 'is_hospital', 'related_institution', 'name_match', 'url_match', 'domain_match']
+    2: ['name_match', 'url_match', 'domain_match', 'variant_match', 'name_to_sigla_match', 'variants_to_sigla_match', 'Sigla_A', 'Sigla_B', 'sigla_match'],
+    3: ['name_match', 'url_match', 'domain_match', 'variant_match', 'unesp_match', 'A_original_index', 'B_original_index', 'Sigla_A'],
+    4: ['matched_label', 'match_type', 'is_hospital', 'related_institution', 'name_match', 'url_match', 'domain_match', 'puc_match', 'B_original_index'],
+    5: ['Sigla.1', 'match_count', 'B_original_index', 'FATEC_match', 'B_original_index'],
+    6: ['eid', 'afid', 'scopus_name', 'ror_name', 'ror_id', 'matched_label', 'match_type', 'link', 'is_hospital', 'related_institution', 'name_match', 'url_match', 'domain_match', 'link_match'],
+    7: ['similarity_score', 'match_type'],
+    8: ['similarity_score', 'match_type']
 }
 
 # Drop columns from each dataframe

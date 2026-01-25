@@ -1,8 +1,4 @@
-from collections import defaultdict
 import pandas as pd
-import ast
-import re
-
 
 EMEC = pd.read_csv(f'./data/data/raw/EMEC/EMEC_institutions.csv', encoding='utf-8', dtype=object)
 SCOPUS = pd.read_csv(f'./data/data/staging/aux_institutions.csv', encoding='utf-8', dtype=object)
@@ -20,6 +16,8 @@ def normalize_site(url):
     url = url.replace('www4.', '')
     url = url.replace('www5.', '')
     url = url.replace('internacional.', '')
+    url = url.replace('international.', '')
+    url = url.replace('portal.', '')
     url = url.replace('\'', '')
     url = url.replace('[', '')
     

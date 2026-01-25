@@ -39,7 +39,7 @@ def normalize_name(text):
     return str(text).normalize('NFKD').encode('ascii', errors='ignore').decode('utf-8').lower()
 
 # Load and prepare data
-SCOPUS = pd.read_csv('./data/code/matchDuplicatedNames/3_matchScopusToEMECSpecialCases/1_matchPUC/counting.csv', encoding='utf-8')
+SCOPUS = pd.read_csv('./data/code/matchDuplicatedNames/3_matchScopusToEMECSpecialCases/2_matchFATEC/counting.csv', encoding='utf-8')
 SCOPUS = SCOPUS[SCOPUS['match_count'] == 0].copy()
 
 with open('./data/code/matchDuplicatedNames/4_matchScopusToROR/ror_brazil.json', 'r', encoding='utf-8') as f:
@@ -76,10 +76,10 @@ ROR = pd.DataFrame(ror_rows)
 
 SCOPUS['normalized_domain'] = SCOPUS['domain'].apply(normalize_site)
 SCOPUS['normalized_url'] = SCOPUS['url'].apply(normalize_site)
-SCOPUS['normalized_name'] = SCOPUS['name'].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8').str.lower().apply(lambda x: re.sub(r'\s*\([^)]*\)', '', x))
-SCOPUS['normalized_variants'] = SCOPUS['variants'].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8').str.lower().apply(lambda x: re.sub(r'\s*\([^)]*\)', '', x))
-print(SCOPUS['normalized_domain'] )
-print(SCOPUS['normalized_url'] )
+SCOPUS['normalized_name'] = SCOPUS['name'].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8').str.lower().apply(lambda x: re.sub(r'\s*\([^)]*\)', '', x)).str.strip().apply(lambda x: re.sub(r'[\[\]()/\\-]', '', x))
+SCOPUS['normalized_variants'] = SCOPUS['variants'].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8').str.lower().apply(lambda x: re.sub(r'\s*\([^)]*\)', '', x)).str.strip().apply(lambda x: re.sub(r'[\[\]()/\\-]', '', x))
+
+
 def normalize_label(label_list):
     """Normalize a list of labels (now they're already extracted as strings)"""
     if not isinstance(label_list, list):
@@ -95,7 +95,7 @@ def normalize_label(label_list):
             normalized_labels.append(normalized)
     return normalized_labels
 
-ROR['normalized_name'] = ROR['name'].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8').str.lower().apply(lambda x: re.sub(r'\s*\([^)]*\)', '', x))
+ROR['normalized_name'] = ROR['name'].str.normalize('NFKD').str.encode('ascii', errors='ignore').str.decode('utf-8').str.lower().apply(lambda x: re.sub(r'\s*\([^)]*\)', '', x)).str.strip().apply(lambda x: re.sub(r'[\[\]()/\\-]', '', x))
 ROR['normalized_labels'] = ROR['labels'].apply(normalize_label)
 ROR['normalized_links'] = ROR['links'].apply(normalize_site)
 

@@ -1,4 +1,3 @@
-from collections import defaultdict
 import pandas as pd
 import ast
 import re
@@ -15,7 +14,7 @@ def normalize_text(text):
     text = str(text)
     text = unicodedata.normalize('NFKD', text)
     text = text.encode('ascii', errors='ignore').decode('utf-8').lower()    
-    text = re.sub(r'[\[\]()/\\-]', ' ', text)
+    text = re.sub(r'[\[\]()/\\-]', ' ', text).strip()
     return text
 
 SCOPUS['normalized_variants'] = SCOPUS['variants'].apply(ast.literal_eval)
@@ -30,14 +29,27 @@ def extract_siglas(row):
     siglas = []
     # Add original sigla if exists
     if pd.notna(row['Sigla']):
-        siglas.append(row['Sigla'])
+        siglas.append(str(row['Sigla']).upper())
     # Extract siglas from variants
     if pd.notna(row['variants']):
         variants_list = ast.literal_eval(row['variants']) if isinstance(row['variants'], str) else row['variants']
         for variant in variants_list:
             match = re.search(r'\(([^)]+)\)', str(variant))
-            if match:
-                siglas.append(match.group(1))
+            if match and str(match).upper() not in siglas:
+                siglas.append(str(match.group(1)).upper())
+
+    # If no sigla found, try to extract everything after the last '-'
+    if pd.notna(row['name']):
+        name = str(row['name']).strip()
+        if '-' in name:
+            splitted_name = name.split('-')
+            filtered = [s for s in splitted_name if len(s.strip()) >= 3]
+            shortest_string = min(filtered, key=len) if filtered else None
+            if shortest_string:
+                possible_sigla = normalize_text(shortest_string.strip()).upper()
+                if possible_sigla:
+                    siglas.append(possible_sigla)
+    
     return siglas if siglas else [None]
 
 SCOPUS['Sigla'] = SCOPUS.apply(extract_siglas, axis=1)
@@ -61,36 +73,39 @@ def match_institutions(inst_EMEC, inst_SCOPUS):
             return False
         # Check if city is in normalized_name
         if pd.notna(row['normalized_Instituição(IES)']) and normalize_text(city) in str(row['normalized_Instituição(IES)']).lower():
-            print(f'{city} in {row["normalized_Instituição(IES)"]}')
             return True
         return False
 
-    # Match 1: SCOPUS Sigla list vs EMEC Sigla (with UF/state filter)
+    # Match 1: SCOPUS Sigla list vs EMEC Sigla
     inst_SCOPUS_exploded = inst_SCOPUS.explode('Sigla')
     inst_SCOPUS_exploded = inst_SCOPUS_exploded.dropna(subset=['Sigla'])
+    print(inst_SCOPUS_exploded)
     
     match1 = pd.merge(
         inst_EMEC.dropna(subset=['Sigla']),
         inst_SCOPUS_exploded.dropna(subset=['Sigla']),
-        left_on=['Sigla', 'UF'],
-        right_on=['Sigla', 'state'],
+        left_on=['Sigla'],
+        right_on=['Sigla'],
         suffixes=('_A', '_B')
     )
     match1['sigla_match'] = 1
     # Filter for special siglas
     match1 = match1[match1.apply(city_in_text, axis=1)]
+    print(f'Sigla in sigla matches found: {len(match1)}')
 
-    # Match 2: SCOPUS normalized_name vs EMEC Sigla (with UF/state filter)
+    # Match 2: SCOPUS normalized_name vs EMEC Sigla
     match2 = pd.merge(
         inst_EMEC.dropna(subset=['Sigla']),
         inst_SCOPUS.dropna(subset=['normalized_name']),
-        left_on=['Sigla', 'UF'],
-        right_on=['normalized_name', 'state'],
+        left_on=['Sigla'],
+        right_on=['normalized_name'],
         suffixes=('_A', '_B')
     )
     match2['name_to_sigla_match'] = 1
     # Filter for special siglas
     match2 = match2[match2.apply(city_in_text, axis=1)]
+    print(f'Sigla in name matches found: {len(match2)}')
+    
 
     # Match 3: SCOPUS normalized_variants vs EMEC Sigla (with UF/state filter)
     inst_SCOPUS_variants_exploded = inst_SCOPUS.explode('normalized_variants')
@@ -99,13 +114,27 @@ def match_institutions(inst_EMEC, inst_SCOPUS):
     match3 = pd.merge(
         inst_EMEC.dropna(subset=['Sigla']),
         inst_SCOPUS_variants_exploded.dropna(subset=['normalized_variants']),
-        left_on=['Sigla', 'UF'],
-        right_on=['normalized_variants', 'state'],
+        left_on=['Sigla'],
+        right_on=['normalized_variants'],
         suffixes=('_A', '_B')
     )
     match3['variants_to_sigla_match'] = 1
     # Filter for special siglas
     match3 = match3[match3.apply(city_in_text, axis=1)]
+    print(f'Sigla in variants matches found: {len(match3)}')
+    
+    # Match 4: SCOPUS normalized_name vs EMEC Sigla
+    match4 = pd.merge(
+        inst_EMEC.dropna(subset=['Sigla']),
+        inst_SCOPUS.dropna(subset=['name']),
+        left_on=['Sigla'],
+        right_on=['name'],
+        suffixes=('_A', '_B')
+    )
+    match4['name_to_sigla_match'] = 1
+    # Filter for special siglas
+    print(f'Sigla in name matches found: {len(match4)}')
+    
 
     all_matches = pd.concat([match1, match2, match3], ignore_index=True)
     

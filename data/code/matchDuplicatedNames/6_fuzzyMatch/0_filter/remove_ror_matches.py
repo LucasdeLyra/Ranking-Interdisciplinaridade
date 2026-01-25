@@ -1,7 +1,7 @@
 import pandas as pd
 
 # Read both counting files
-counting_3 = pd.read_csv('./data/code/matchDuplicatedNames/3_matchScopusToEMECSpecialCases/1_matchPUC/counting.csv', encoding='utf-8')
+counting_3 = pd.read_csv('./data/code/matchDuplicatedNames/3_matchScopusToEMECSpecialCases/2_matchFATEC/counting.csv', encoding='utf-8')
 counting_3 = counting_3[counting_3['match_count'] == 0].copy()
 
 counting_5 = pd.read_csv('./data/code/matchDuplicatedNames/5_matchRORToEMEC/counting.csv', encoding='utf-8')
@@ -20,5 +20,5 @@ print(f"Items in counting_5 with match_count > 0: {len(matched_indices)}")
 print(f"Items remaining (unmatched): {len(unmatched)}")
 
 # Save the result
-unmatched.to_csv('./data/code/matchDuplicatedNames/6_matchManually/0_filter/counting.csv', index=False, encoding='utf-8', errors='replace')
-print("Saved to ./data/code/matchDuplicatedNames/6_matchManually/0_filter/counting.csv")
+unmatched.to_csv('./data/code/matchDuplicatedNames/6_fuzzyMatch/0_filter/counting.csv', index=False, encoding='utf-8', errors='replace')
+print("Saved to ./data/code/matchDuplicatedNames/6_fuzzyMatch/0_filter/counting.csv")

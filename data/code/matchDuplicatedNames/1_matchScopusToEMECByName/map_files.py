@@ -1,4 +1,3 @@
-from collections import defaultdict
 import pandas as pd
 import ast
 import re
@@ -9,18 +8,17 @@ EMEC = pd.read_csv(f'./data/data/raw/EMEC/EMEC_institutions.csv', encoding='utf-
 SCOPUS = pd.read_csv('./data/code/matchDuplicatedNames/0_matchScopusToEMECByDomain/counting.csv', encoding='utf-8')
 SCOPUS = SCOPUS[SCOPUS['match_count'] == 0].copy()
 
-
-SCOPUS['normalized_variants'] = SCOPUS['variants'].apply(ast.literal_eval)
-
 def normalize_text(text):
     if pd.isna(text):
         return text
     text = str(text)
     text = unicodedata.normalize('NFKD', text)
     text = text.encode('ascii', errors='ignore').decode('utf-8').lower()    
-    text = re.sub(r'[\[\]()/\\-]', ' ', text)
+    text = re.sub(r'[\[\]()/\\-]', '', text)
+    text = re.sub(r'\b(da|de|di|do|du) ', '', text)
     return text
 
+SCOPUS['normalized_variants'] = SCOPUS['variants'].apply(ast.literal_eval)
 EMEC['normalized_Instituição(IES)'] = EMEC['Instituição(IES)'].apply(normalize_text)
 SCOPUS['normalized_name'] = SCOPUS['name'].apply(normalize_text)
 SCOPUS['normalized_variants'] = SCOPUS['normalized_variants'].apply(lambda lst: [normalize_text(item) for item in lst])
@@ -37,6 +35,7 @@ def match_institutions(inst_EMEC, inst_SCOPUS):
         suffixes=('_A', '_B')
     )
     match1['name_match'] = 1
+    print(f'Name matches found: {len(match1)}')
     
     inst_EMEC_filtered = inst_EMEC.dropna(subset=['normalized_Instituição(IES)'])
     inst_SCOPUS_filtered = inst_SCOPUS.dropna(subset=['normalized_variants'])
@@ -52,7 +51,8 @@ def match_institutions(inst_EMEC, inst_SCOPUS):
         suffixes=('_A', '_B')
     )
     match4['variant_match'] = 1
-
+    print(f'Variant matches found: {len(match4)}')
+    
     all_matches = pd.concat([match1, match4], ignore_index=True)
     
     agg_dict = {col: 'first' for col in all_matches.columns if col not in ['A_original_index', 'B_original_index']}
