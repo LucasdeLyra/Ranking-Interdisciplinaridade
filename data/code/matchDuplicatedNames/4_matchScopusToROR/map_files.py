@@ -4,9 +4,6 @@ import json
 import re
 
 def normalize_site(url):
-    if pd.isna(url):
-        return url
-    
     url = str(url).lower().strip()
     url = url.replace('http://', '')
     url = url.replace('https://', '') 

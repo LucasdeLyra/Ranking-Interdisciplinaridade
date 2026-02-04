@@ -157,7 +157,8 @@ if matches:
     
     final_matches = pd.DataFrame(matches_list)
     final_matches.drop(['Sigla_B'], axis=1, inplace=True)
-    
+    final_matches = final_matches.drop_duplicates(subset=['B_original_index'], keep='first')
+
     # Reorder columns: EMEC columns first, then SCOPUS columns with _B suffix, then identifiers
     emec_cols = [col for col in final_matches.columns if '_B' not in col and col not in ['B_original_index', 'puc_match', 'normalized_name', 'normalized_state']]
     scopus_cols = sorted([col for col in final_matches.columns if '_B' in col])

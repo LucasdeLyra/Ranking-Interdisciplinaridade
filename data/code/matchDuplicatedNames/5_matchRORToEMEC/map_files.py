@@ -135,6 +135,7 @@ def match_institutions(inst_EMEC, inst_ROR):
     })
     
     final_matches = all_matches.groupby(['A_original_index', 'B_original_index']).agg(agg_dict).reset_index()
+    final_matches = final_matches.drop_duplicates(subset=['B_original_index'], keep='first')
     flag_columns = ['name_match', 'url_match', 'domain_match', 'link_match']
     final_matches[flag_columns] = final_matches[flag_columns].fillna(0).astype(int)
     

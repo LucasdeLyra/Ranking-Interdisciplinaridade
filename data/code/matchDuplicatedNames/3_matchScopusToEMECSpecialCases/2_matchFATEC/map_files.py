@@ -126,7 +126,7 @@ if matches:
         matches_list.append(merged_row)
     
     final_matches = pd.DataFrame(matches_list)
-    
+    final_matches = final_matches.drop_duplicates(subset=['B_original_index'], keep='first')
     # Remove _B suffix from column names
     final_matches.columns = [col.replace('_B', '') if '_B' in col else col for col in final_matches.columns]
     

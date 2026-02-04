@@ -96,7 +96,8 @@ def match_institutions(inst_EMEC, inst_SCOPUS):
     
 
     all_matches = pd.concat([match2, match3, match4, match5], ignore_index=True)
-    
+    all_matches = all_matches.drop_duplicates(subset=['B_original_index'], keep='first')
+
     agg_dict = {col: 'first' for col in all_matches.columns if col not in ['A_original_index', 'B_original_index']}
     agg_dict.update({
         'url_match': 'sum',

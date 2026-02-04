@@ -98,6 +98,8 @@ if matches:
     scopus_reset['key'] = 1
     
     final_matches = pd.merge(matched_df, scopus_reset, on='key', suffixes=('_A', '_B'))
+    final_matches = final_matches.drop_duplicates(subset=['B_original_index'], keep='first')
+
     final_matches.drop(['key', 'Sigla_B'], axis=1, inplace=True)
     
     
