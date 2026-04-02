@@ -293,7 +293,7 @@ def main():
     for m in matches:
         try:
             score = float(m.get("similarity_score", "0"))
-            if score > 95:
+            if score > 90:
                 filtered_matches.append(m)
         except (ValueError, TypeError):
             pass

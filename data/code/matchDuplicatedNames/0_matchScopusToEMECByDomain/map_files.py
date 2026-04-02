@@ -2,6 +2,7 @@ import pandas as pd
 
 EMEC = pd.read_csv(f'./data/data/raw/EMEC/EMEC_institutions.csv', encoding='utf-8', dtype=object)
 SCOPUS = pd.read_csv(f'./data/data/staging/aux_institutions.csv', encoding='utf-8', dtype=object)
+EMEC = EMEC[~EMEC['Código IES'].isin(['17613', '17612'])]
 
 def normalize_site(url):
     if pd.isna(url):

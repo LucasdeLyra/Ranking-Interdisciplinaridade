@@ -3,7 +3,6 @@ import ast
 import re
 import unicodedata
 
-
 EMEC = pd.read_csv(f'./data/data/raw/EMEC/EMEC_institutions.csv', encoding='utf-8', dtype=object)
 SCOPUS = pd.read_csv('./data/code/matchDuplicatedNames/1_matchScopusToEMECByName/counting.csv', encoding='utf-8')
 SCOPUS = SCOPUS[SCOPUS['match_count'] == 0].copy()
@@ -79,7 +78,6 @@ def match_institutions(inst_EMEC, inst_SCOPUS):
     # Match 1: SCOPUS Sigla list vs EMEC Sigla
     inst_SCOPUS_exploded = inst_SCOPUS.explode('Sigla')
     inst_SCOPUS_exploded = inst_SCOPUS_exploded.dropna(subset=['Sigla'])
-    print(inst_SCOPUS_exploded)
     
     match1 = pd.merge(
         inst_EMEC.dropna(subset=['Sigla']),
@@ -104,7 +102,7 @@ def match_institutions(inst_EMEC, inst_SCOPUS):
     match2['name_to_sigla_match'] = 1
     # Filter for special siglas
     match2 = match2[match2.apply(city_in_text, axis=1)]
-    print(f'Sigla in name matches found: {len(match2)}')
+    print(f'Sigla in normalized name matches found: {len(match2)}')
     
 
     # Match 3: SCOPUS normalized_variants vs EMEC Sigla (with UF/state filter)
