@@ -60,7 +60,7 @@ with open('./data/data/raw/article_subareas.json', 'r') as subject_areas_file:
     subjareas = []
     for area in all_areas:
         abbreviation = area['desc'][:4].upper()
-        if area['code'] == 15:
+        if area['code'] == '15':
             abbreviation = 'CENG'
         for subarea in area['child']:
             subjareas.append({'code': subarea['code'], 'area': subarea['desc'], 'abbreviation': abbreviation})
