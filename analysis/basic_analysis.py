@@ -324,7 +324,7 @@ for cutoff in cutoffs:
         # Get output paths
         macro_path, sub_path = get_output_paths(quartile, cutoff_limiar)
         
-        di_table_subs.to_csv(f'.debug/{sub_path}', index=False)  # Save intermediate di_table_subs for debugging
+        di_table_subs.to_csv(f'./debug/{sub_path}', index=False)  # Save intermediate di_table_subs for debugging
         di_table_macros.to_csv(f'./debug/{macro_path}', index=False)  # Save intermediate di_table_macros for debugging
         
         # Save ranking tables to appropriate paths
