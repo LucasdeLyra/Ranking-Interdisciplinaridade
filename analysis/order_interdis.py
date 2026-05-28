@@ -11,15 +11,22 @@ ruf = pd.read_csv('./analysis/data/RUF.csv', encoding="utf-8", delimiter=';')
 ruf['normalized_Universidade'] = normalize_text(ruf['Universidade'])
 print(f"✓ Loaded RUF data: {len(ruf)} rows\n")
 
+sensitivity_macro_folder = Path('./analysis/data/sensitivity/macro')
+sensitivity_sub_folder = Path('./analysis/data/sensitivity/sub')
 macro_folder = Path('./analysis/data/macro')
 sub_folder = Path('./analysis/data/sub')
 
+sensitivity_macro_files = list(sensitivity_macro_folder.glob('**/interdis.csv'))
+sensitivity_sub_files = list(sensitivity_sub_folder.glob('**/interdis.csv'))
 macro_files = list(macro_folder.glob('**/interdis.csv'))
 sub_files = list(sub_folder.glob('**/interdis.csv'))
-interdis_files = macro_files + sub_files
+
+interdis_files = macro_files + sub_files + sensitivity_macro_files + sensitivity_sub_files
 
 print(f"Found {len(macro_files)} interdis.csv files in macro folder")
+print(f"Found {len(sensitivity_macro_files)} interdis.csv files in sensitivity macro folder")
 print(f"Found {len(sub_files)} interdis.csv files in sub folder")
+print(f"Found {len(sensitivity_sub_files)} interdis.csv files in sensitivity sub folder")
 print(f"Total: {len(interdis_files)} files\n")
 
 for file_path in interdis_files:
